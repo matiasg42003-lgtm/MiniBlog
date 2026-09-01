@@ -1,7 +1,10 @@
+// Configuracion de Express
 const express = require("express");
 const app = express();
 const PORT = 3000;
 
+
+// Datos en memoria
 let authors = [
     {
         id: 1,
@@ -61,22 +64,91 @@ let posts = [
     }
 ];
 
+// Middlewares
 app.use(express.json());
 
+// Ruta principal
 app.get("/", (req, res) => {
     res.json({
         message: "API Miniblog funcionando"
     });
 });
 
+// Endpoints de autores
+
+// Obtener todos los autores
 app.get("/authors", (req, res) => {
     res.json(authors);
 });
 
-app.get("/posts", (req, res) => {
-    res.json(posts);
+// Obtener un autor por ID
+app.get("/authors/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const author = authors.find(author => author.id === id);
+
+    if (!author) {
+        return res.status(404).json({
+            message: "Autor no encontrado"
+        });
+    }
+    res.json(author);
+})
+
+// Crear un autor
+app.post("/authors", (req, res) => {
+    const { name, email, bio } = req.body;
+
+    const newAuthor = {
+        id: authors.length + 1,
+        name,
+        email,
+        bio
+    };
+    authors.push(newAuthor);
+
+    res.status(201).json(newAuthor);
+
 });
 
+// Actualizar un autor
+app.put("/authors/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const { name, email, bio } = req.body;
+
+    const author = authors.find(author => author.id === id);
+
+    if (!author) {
+        return res.status(404).json({
+            message: "Autor no encontrado"
+        });
+    }
+
+    author.name = name;
+    author.email = email;
+    author.bio = bio;
+
+    res.json(author);
+});
+
+// Eliminar un autor
+app.delete("/authors/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const authorIndex = authors.findIndex(author => author.id === id);
+
+    if (authorIndex === -1) {
+        return res.status(404).json({
+            message: "Autor no encontrado"
+        });
+    }
+
+    authors.splice(authorIndex, 1);
+
+    res.status(204).send();
+});
+
+
+
+// Servidor
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en ${PORT}`);
 });
