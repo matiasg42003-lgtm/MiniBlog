@@ -15,3 +15,4 @@ CREATE TABLE posts (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
 );
+
