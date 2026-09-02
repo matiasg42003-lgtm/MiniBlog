@@ -11,5 +11,16 @@ const pool = new Pool({
     port: process.env.DB_PORT
 });
 
+// Probar conexion con PostgreSQL
+pool.query("SELECT NOW()", (error, result) => {
+    if (error) {
+        console.error("Error al conectar con PostgreSQL: ", error);
+    } else {
+        console.log("Conexion con PostgreSQL exitosa");
+        console.log(result.rows[0]);
+    }
+});
+
+
 // Exportar el pool 
 module.exports = pool;
