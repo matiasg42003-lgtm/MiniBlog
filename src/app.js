@@ -74,7 +74,8 @@ app.get("/", (req, res) => {
     });
 });
 
-// Endpoints de autores
+
+// Endpoints de autores //
 
 // Obtener todos los autores
 app.get("/authors", (req, res) => {
@@ -147,6 +148,83 @@ app.delete("/authors/:id", (req, res) => {
 });
 
 
+// Endpoints de autores //
+
+// Obtener todos los posts
+app.get("/posts", (req, res) => {
+    res.json(posts);
+});
+
+// Obtener un post por ID
+app.get("/posts/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const post = posts.find(post => post.id === id);
+
+    if (!post) {
+        return res.status(404).json({
+            message: "Post no encontrado"
+        });
+    }
+    res.json(post);
+});
+
+// Filtrar posts por autor
+app.get("/posts/author/:authorId", (req, res) => {
+    const authorId = Number(req.params.authorId);
+    const authorPosts = posts.filter(post => post.author_id === authorId);
+
+    res.json(authorPosts);
+});
+
+// Crear nuevo post
+app.post("/posts", (req, res) => {
+    const { title, content, author_id, published } = req.body;
+    const newPost = {
+        id: posts.length + 1,
+        title,
+        content,
+        author_id,
+        published
+    };
+    posts.push(newPost);
+
+    res.status(201).json(newPost);
+});
+
+// Modificar post
+app.put("/posts/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const { title, content, author_id, published } = req.body;
+    const post = posts.find(post => post.id === id);
+
+    if (!post) {
+        return res.status(404).json({
+            message: "Post no encontrado"
+        });
+    }
+    post.title = title;
+    post.content = content;
+    post.author_id = author_id;
+    post.published = published;
+
+    res.json(post);
+});
+
+//Eliminar post
+app.delete("/posts/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const postIndex = posts.findIndex(post => post.id === id);
+
+    if (postIndex === -1) {
+        return res.status(404).json({
+            message: "post no encontrado"
+        });
+    }
+
+    posts.splice(postIndex, 1);
+
+    res.status(204).send();
+});
 
 // Servidor
 app.listen(PORT, () => {
