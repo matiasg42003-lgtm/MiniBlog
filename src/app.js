@@ -80,74 +80,105 @@ app.get("/", (req, res) => {
 // Endpoints de autores //
 
 // Obtener todos los autores
-app.get("/authors", (req, res) => {
-    res.json(authors);
+app.get("/authors", async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM authors ORDER BY id");
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error al obtener autores: ", error);
+        res.status(500).json({
+            message: "Error al obtener autores"
+        });
+    }
 });
 
 // Obtener un autor por ID
-app.get("/authors/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const author = authors.find(author => author.id === id);
+app.get("/authors/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const result = await pool.query("SELECT * FROM authors WHERE id = $1", [id]);
 
-    if (!author) {
-        return res.status(404).json({
-            message: "Autor no encontrado"
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Autor no encontrado"
+            });
+        }
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error("Error al obtener autor: ", error);
+        res.status(500).json({
+            message: "Error al obtener autor"
         });
     }
-    res.json(author);
-})
+});
 
 // Crear un autor
-app.post("/authors", (req, res) => {
-    const { name, email, bio } = req.body;
+app.post("/authors", async (req, res) => {
+    try {
+        const { name, email, bio } = req.body;
+        const result = await pool.query(
+            "INSERT INTO authors (name, email, bio) VALUES ($1, $2, $3) RETURNING *",
+            [name, email, bio]
+        );
+        res.status(201).json(result.rows[0]);
 
-    const newAuthor = {
-        id: authors.length + 1,
-        name,
-        email,
-        bio
-    };
-    authors.push(newAuthor);
-
-    res.status(201).json(newAuthor);
-
+    } catch (error) {
+        console.error("Error al crear autor:", error);
+        res.status(500).json({
+            message: "Error al crear autor"
+        });
+    }
 });
 
 // Actualizar un autor
-app.put("/authors/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const { name, email, bio } = req.body;
+app.put("/authors/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const { name, email, bio } = req.body;
+        const result = await pool.query(
+            "UPDATE authors SET name = $1, email = $2, bio = $3 WHERE id = $4 RETURNING *",
+            [name, email, bio, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Autor no encontrado"
+            });
+        }
+        res.json(result.rows[0]);
 
-    const author = authors.find(author => author.id === id);
-
-    if (!author) {
-        return res.status(404).json({
-            message: "Autor no encontrado"
+    } catch (erorr) {
+        console.error("Error al actualizar autor:", error);
+        res.status(500).json({
+            message: "Error al actualizar autor"
         });
     }
-
-    author.name = name;
-    author.email = email;
-    author.bio = bio;
-
-    res.json(author);
 });
 
 // Eliminar un autor
-app.delete("/authors/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const authorIndex = authors.findIndex(author => author.id === id);
+app.delete("/authors/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const result = await pool.query(
+            "DELETE FROM authors WHERE id = $1 RETURNING *",
+            [id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Autor no encontrado"
+            });
+        }
+        res.status(204).send();
 
-    if (authorIndex === -1) {
-        return res.status(404).json({
-            message: "Autor no encontrado"
+    } catch (error) {
+        console.error("Error al eliminar autor:", error);
+        res.status(500).json({
+            message: "Error al eliminar autor"
         });
     }
-
-    authors.splice(authorIndex, 1);
-
-    res.status(204).send();
 });
+
 
 
 // Endpoints de autores //
