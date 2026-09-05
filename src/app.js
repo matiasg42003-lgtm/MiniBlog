@@ -181,82 +181,131 @@ app.delete("/authors/:id", async (req, res) => {
 
 
 
-// Endpoints de autores //
+// Endpoints de posts //
 
 // Obtener todos los posts
-app.get("/posts", (req, res) => {
-    res.json(posts);
+app.get("/posts", async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM posts ORDER BY id"
+        );
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error al obtener posts:", error);
+        res.status(500).json({
+            message: "Error al obtener posts"
+        });
+    }
 });
 
 // Obtener un post por ID
-app.get("/posts/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const post = posts.find(post => post.id === id);
+app.get("/posts/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const result = await pool.query(
+            "SELECT * FROM posts WHERE id = $1",
+            [id]
+        );
 
-    if (!post) {
-        return res.status(404).json({
-            message: "Post no encontrado"
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Post no encontrado"
+            });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error("Error al obtener post:", error);
+        res.status(500).json({
+            message: "Error al obtener post"
         });
     }
-    res.json(post);
 });
 
 // Filtrar posts por autor
-app.get("/posts/author/:authorId", (req, res) => {
-    const authorId = Number(req.params.authorId);
-    const authorPosts = posts.filter(post => post.author_id === authorId);
+app.get("/posts/author/:authorId", async (req, res) => {
+    try {
+        const authorId = Number(req.params.authorId);
+        const result = await pool.query(
+            "SELECT * FROM posts WHERE author_id = $1 ORDER BY id",
+            [authorId]
+        );
 
-    res.json(authorPosts);
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error al obtener posts del autor:", error);
+        res.status(500).json({
+            message: "Error al obtener posts del autor"
+        });
+    }
 });
-
 // Crear nuevo post
-app.post("/posts", (req, res) => {
-    const { title, content, author_id, published } = req.body;
-    const newPost = {
-        id: posts.length + 1,
-        title,
-        content,
-        author_id,
-        published
-    };
-    posts.push(newPost);
+app.post("/posts", async (req, res) => {
+    try {
+        const { title, content, author_id, published } = req.body;
+        const result = await pool.query(
+            "INSERT INTO posts (title, content, author_id, published) VALUES ($1, $2, $3, $4) RETURNING *",
+            [title, content, author_id, published]
+        );
 
-    res.status(201).json(newPost);
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error al crear post:", error);
+        res.status(500).json({
+            message: "Error al crear post"
+        });
+    }
 });
 
 // Modificar post
-app.put("/posts/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const { title, content, author_id, published } = req.body;
-    const post = posts.find(post => post.id === id);
+app.put("/posts/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const { title, content, author_id, published } = req.body;
 
-    if (!post) {
-        return res.status(404).json({
-            message: "Post no encontrado"
+        const result = await pool.query(
+            "UPDATE posts SET title = $1, content = $2, author_id = $3, published = $4 WHERE id = $5 RETURNING *",
+            [title, content, author_id, published, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Post no encontrado"
+            });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error("Error al actualizar post:", error);
+        res.status(500).json({
+            message: "Error al actualizar post"
         });
     }
-    post.title = title;
-    post.content = content;
-    post.author_id = author_id;
-    post.published = published;
-
-    res.json(post);
 });
 
 //Eliminar post
-app.delete("/posts/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const postIndex = posts.findIndex(post => post.id === id);
+app.delete("/posts/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const result = await pool.query(
+            "DELETE FROM posts WHERE id = $1 RETURNING *",
+            [id]
+        );
 
-    if (postIndex === -1) {
-        return res.status(404).json({
-            message: "post no encontrado"
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Post no encontrado"
+            });
+        }
+
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error al eliminar post:", error);
+        res.status(500).json({
+            message: "Error al eliminar post"
         });
     }
-
-    posts.splice(postIndex, 1);
-
-    res.status(204).send();
 });
 
 // Servidor
