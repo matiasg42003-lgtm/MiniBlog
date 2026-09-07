@@ -315,6 +315,11 @@ app.use((error, req, res, next) => {
 
 
 // Servidor
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en ${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Servidor escuchando en ${PORT}`);
+    });
+}
+
+// Exportar la aplicación
+module.exports = app;
