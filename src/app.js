@@ -6,65 +6,6 @@ const pool = require("./db");
 const PORT = 3000;
 
 
-// Datos en memoria
-let authors = [
-    {
-        id: 1,
-        name: "Ana García",
-        email: "ana@example.com",
-        bio: "Desarrolladora full-stack apasionada por Node.js"
-    },
-    {
-        id: 2,
-        name: "Carlos Ruiz",
-        email: "carlos@example.com",
-        bio: "Escritor técnico especializado en bases de datos"
-    },
-    {
-        id: 3,
-        name: "María López",
-        email: "maria@example.com",
-        bio: "Ingeniera de software con foco en APIs REST"
-    }
-];
-
-let posts = [
-    {
-        id: 1,
-        title: "Introducción a Node.js",
-        content: "Node.js es un runtime de JavaScript...",
-        author_id: 1,
-        published: true
-    },
-    {
-        id: 2,
-        title: "PostgreSQL vs MySQL",
-        content: "Ambas bases de datos tienen ventajas...",
-        author_id: 2,
-        published: true
-    },
-    {
-        id: 3,
-        title: "APIs RESTful",
-        content: "REST es un estilo arquitectónico...",
-        author_id: 1,
-        published: true
-    },
-    {
-        id: 4,
-        title: "Manejo de errores en Express",
-        content: "El manejo apropiado de errores...",
-        author_id: 3,
-        published: false
-    },
-    {
-        id: 5,
-        title: "Async/Await explicado",
-        content: "Las promesas simplifican el código asíncrono...",
-        author_id: 3,
-        published: false
-    }
-];
 
 // Middlewares
 app.use(express.json());
@@ -80,21 +21,18 @@ app.get("/", (req, res) => {
 // Endpoints de autores //
 
 // Obtener todos los autores
-app.get("/authors", async (req, res) => {
+app.get("/authors", async (req, res, next) => {
     try {
         const result = await pool.query("SELECT * FROM authors ORDER BY id");
         res.json(result.rows);
 
     } catch (error) {
-        console.error("Error al obtener autores: ", error);
-        res.status(500).json({
-            message: "Error al obtener autores"
-        });
+        next(error);
     }
 });
 
 // Obtener un autor por ID
-app.get("/authors/:id", async (req, res) => {
+app.get("/authors/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const result = await pool.query("SELECT * FROM authors WHERE id = $1", [id]);
@@ -107,17 +45,22 @@ app.get("/authors/:id", async (req, res) => {
         res.json(result.rows[0]);
 
     } catch (error) {
-        console.error("Error al obtener autor: ", error);
-        res.status(500).json({
-            message: "Error al obtener autor"
-        });
+        next(error);
     }
 });
 
 // Crear un autor
-app.post("/authors", async (req, res) => {
+app.post("/authors", async (req, res, next) => {
     try {
         const { name, email, bio } = req.body;
+
+        // Validar campos obligatorios
+        if (!name || !name.trim() || !email || !email.trim()) {
+            return res.status(400).json({
+                message: "Nombre y email son obligatorios"
+            });
+        }
+
         const result = await pool.query(
             "INSERT INTO authors (name, email, bio) VALUES ($1, $2, $3) RETURNING *",
             [name, email, bio]
@@ -125,18 +68,23 @@ app.post("/authors", async (req, res) => {
         res.status(201).json(result.rows[0]);
 
     } catch (error) {
-        console.error("Error al crear autor:", error);
-        res.status(500).json({
-            message: "Error al crear autor"
-        });
+        next(error);
     }
 });
 
 // Actualizar un autor
-app.put("/authors/:id", async (req, res) => {
+app.put("/authors/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const { name, email, bio } = req.body;
+
+        // Validar campos obligatorios
+        if (!name || !name.trim() || !email || !email.trim()) {
+            return res.status(400).json({
+                message: "Nombre y email son obligatorios"
+            });
+        }
+
         const result = await pool.query(
             "UPDATE authors SET name = $1, email = $2, bio = $3 WHERE id = $4 RETURNING *",
             [name, email, bio, id]
@@ -148,18 +96,16 @@ app.put("/authors/:id", async (req, res) => {
         }
         res.json(result.rows[0]);
 
-    } catch (erorr) {
-        console.error("Error al actualizar autor:", error);
-        res.status(500).json({
-            message: "Error al actualizar autor"
-        });
+    } catch (error) {
+        next(error);
     }
 });
 
 // Eliminar un autor
-app.delete("/authors/:id", async (req, res) => {
+app.delete("/authors/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
+
         const result = await pool.query(
             "DELETE FROM authors WHERE id = $1 RETURNING *",
             [id]
@@ -172,10 +118,7 @@ app.delete("/authors/:id", async (req, res) => {
         res.status(204).send();
 
     } catch (error) {
-        console.error("Error al eliminar autor:", error);
-        res.status(500).json({
-            message: "Error al eliminar autor"
-        });
+        next(error);
     }
 });
 
@@ -184,7 +127,7 @@ app.delete("/authors/:id", async (req, res) => {
 // Endpoints de posts //
 
 // Obtener todos los posts
-app.get("/posts", async (req, res) => {
+app.get("/posts", async (req, res, next) => {
     try {
         const result = await pool.query(
             "SELECT * FROM posts ORDER BY id"
@@ -192,17 +135,15 @@ app.get("/posts", async (req, res) => {
 
         res.json(result.rows);
     } catch (error) {
-        console.error("Error al obtener posts:", error);
-        res.status(500).json({
-            message: "Error al obtener posts"
-        });
+        next(error);
     }
 });
 
 // Obtener un post por ID
-app.get("/posts/:id", async (req, res) => {
+app.get("/posts/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
+
         const result = await pool.query(
             "SELECT * FROM posts WHERE id = $1",
             [id]
@@ -216,10 +157,7 @@ app.get("/posts/:id", async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (error) {
-        console.error("Error al obtener post:", error);
-        res.status(500).json({
-            message: "Error al obtener post"
-        });
+        next(error);
     }
 });
 
@@ -227,6 +165,7 @@ app.get("/posts/:id", async (req, res) => {
 app.get("/posts/author/:authorId", async (req, res) => {
     try {
         const authorId = Number(req.params.authorId);
+
         const result = await pool.query(
             "SELECT * FROM posts WHERE author_id = $1 ORDER BY id",
             [authorId]
@@ -234,16 +173,33 @@ app.get("/posts/author/:authorId", async (req, res) => {
 
         res.json(result.rows);
     } catch (error) {
-        console.error("Error al obtener posts del autor:", error);
-        res.status(500).json({
-            message: "Error al obtener posts del autor"
-        });
+        next(error);
     }
 });
+
 // Crear nuevo post
-app.post("/posts", async (req, res) => {
+app.post("/posts", async (req, res, next) => {
     try {
-        const { title, content, author_id, published } = req.body;
+        const { title,
+            content,
+            author_id,
+            published = false
+        } = req.body;
+
+        // Validar campos obligatorios
+        if (
+            !title ||
+            !title.trim() ||
+            !content ||
+            !content.trim() ||
+            author_id === undefined ||
+            author_id === null
+        ) {
+            return res.status(400).json({
+                message: "Título, contenido y autor son obligatorios"
+            });
+        }
+
         const result = await pool.query(
             "INSERT INTO posts (title, content, author_id, published) VALUES ($1, $2, $3, $4) RETURNING *",
             [title, content, author_id, published]
@@ -251,18 +207,34 @@ app.post("/posts", async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (error) {
-        console.error("Error al crear post:", error);
-        res.status(500).json({
-            message: "Error al crear post"
-        });
+        next(error);
     }
 });
 
 // Modificar post
-app.put("/posts/:id", async (req, res) => {
+app.put("/posts/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
-        const { title, content, author_id, published } = req.body;
+
+        const { title,
+            content,
+            author_id,
+            published = false
+        } = req.body;
+
+        // Validar campos obligatorios
+        if (
+            !title ||
+            !title.trim() ||
+            !content ||
+            !content.trim() ||
+            author_id === undefined ||
+            author_id === null
+        ) {
+            return res.status(400).json({
+                message: "Título, contenido y autor son obligatorios"
+            });
+        }
 
         const result = await pool.query(
             "UPDATE posts SET title = $1, content = $2, author_id = $3, published = $4 WHERE id = $5 RETURNING *",
@@ -277,17 +249,15 @@ app.put("/posts/:id", async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (error) {
-        console.error("Error al actualizar post:", error);
-        res.status(500).json({
-            message: "Error al actualizar post"
-        });
+        next(error);
     }
 });
 
 //Eliminar post
-app.delete("/posts/:id", async (req, res) => {
+app.delete("/posts/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
+
         const result = await pool.query(
             "DELETE FROM posts WHERE id = $1 RETURNING *",
             [id]
@@ -301,12 +271,48 @@ app.delete("/posts/:id", async (req, res) => {
 
         res.status(204).send();
     } catch (error) {
-        console.error("Error al eliminar post:", error);
-        res.status(500).json({
-            message: "Error al eliminar post"
-        });
+        next(error);
     }
 });
+
+// Middleware global de errores
+app.use((error, req, res, next) => {
+    console.error(error);
+
+    // Email duplicado
+    if (error.code === "23505") {
+        return res.status(400).json({
+            message: "El email ya está registrado"
+        });
+    }
+
+    // Clave foránea inválida
+    if (error.code === "23503") {
+        return res.status(400).json({
+            message: "El autor no existe"
+        });
+    }
+
+    // Campo obligatorio faltante
+    if (error.code === "23502") {
+        return res.status(400).json({
+            message: "Falta un campo obligatorio"
+        });
+    }
+
+    // ID con formato incorrecto
+    if (error.code === "22P02") {
+        return res.status(400).json({
+            message: "El ID no es válido"
+        });
+    }
+
+    // Error desconocido
+    res.status(500).json({
+        message: "Error interno del servidor"
+    });
+});
+
 
 // Servidor
 app.listen(PORT, () => {
