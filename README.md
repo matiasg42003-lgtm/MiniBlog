@@ -170,4 +170,19 @@ Algunos usos concretos fueron:
 * **Resolución de errores durante el desarrollo:** se consultó IA para analizar errores concretos del proyecto, como problemas con rutas, IDs inválidos y errores de sintaxis.
 * **Documentación:** se utilizó IA como apoyo para organizar y redactar el README, explicando cómo instalar, configurar, ejecutar y probar el proyecto.
 
+## Despliegue
+
+La API está desplegada en Railway.
+
+### URL de la API
+
+https://miniblog-production-803f.up.railway.app
+
+### Endpoints principales
+
+* `GET /` — Verificar que la API está funcionando.
+* `GET /authors` — Obtener todos los autores.
+* `GET /posts` — Obtener todos los posts.
+
+La aplicación utiliza un servicio PostgreSQL de Railway para la persistencia de los datos.
 
