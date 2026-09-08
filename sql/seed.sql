@@ -12,31 +12,3 @@ INSERT INTO posts (title, content, author_id, published) VALUES
 ('Async/Await explicado', 'Las promesas simplifican el código asíncrono...', 3, false);CREATE TABLE authors (
 
 
-/* PRUEBAS*/ 
-
- /* Consultas */
-SELECT
-posts.title, authors.name
-FROM posts
-JOIN authors
-ON posts.author_id = authors.id;
-
- /* Seed */
-INSERT INTO posts (title, content, author_id)
-VALUES ('Post de prueba', 'Contenido de prueba', 999);
-
- /* Modificar*/
-UPDATE authors
-SET bio = 'Desarrolladora full-stack apasionada por Node.js'
-WHERE id = 1;
-
-SELECT * FROM authors
-WHERE id = 1;
-
- /* Borrar */
-INSERT INTO authors (name, email, bio)
-VALUES ('Autor Prueba', 'prueba@ejemplo.com', 'Autor temporal');
-SELECT * FROM authors;
-
-DELETE FROM authors
-WHERE ID = 4;

@@ -162,7 +162,7 @@ app.get("/posts/:id", async (req, res, next) => {
 });
 
 // Filtrar posts por autor
-app.get("/posts/author/:authorId", async (req, res) => {
+app.get("/posts/author/:authorId", async (req, res, next) => {
     try {
         const authorId = Number(req.params.authorId);
 
