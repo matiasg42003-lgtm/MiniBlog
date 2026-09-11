@@ -9,6 +9,5 @@ INSERT INTO posts (title, content, author_id, published) VALUES
 ('PostgreSQL vs MySQL', 'Ambas bases de datos tienen ventajas...', 2, true),
 ('APIs RESTful', 'REST es un estilo arquitectónico...', 1, true),
 ('Manejo de errores en Express', 'El manejo apropiado de errores...', 3, false),
-('Async/Await explicado', 'Las promesas simplifican el código asíncrono...', 3, false);CREATE TABLE authors (
-
+('Async/Await explicado', 'Las promesas simplifican el código asíncrono...', 3, false);
 
